@@ -894,8 +894,11 @@
             
             const result = await res.json();
             const rows = Array.isArray(result) ? result : (result.status === "success" && result.data ? Object.entries(result.data).map(([id, d]) => ({id, ...d})) : null); if (rows) {
-                for (const d of rows) { const id = d?.id;
-                    if (tablesData[id]) Object.assign(tablesData[id], d);
+                for (const d of rows) {
+                    const apiId = String(d?.id || '');
+                    const number = Number(d?.number || apiId.match(/\d+/)?.[0]);
+                    const localId = 'T' + number;
+                    if (tablesData[localId]) Object.assign(tablesData[localId], d, { id: localId, apiId });
                 }
                 badge.classList.add('online');
                 label.textContent = 'Google Sheets online';
@@ -1192,7 +1195,7 @@
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(t)
+                body: JSON.stringify({ ...t, id: t.apiId || t.id })
             });
 
             // Apps Script ContentService redireciona a resposta para googleusercontent;
@@ -1202,9 +1205,10 @@
             const verifyResponse = await fetch(WEB_APP_URL + '?_=' + Date.now(), { cache: 'no-store' });
             if (!verifyResponse.ok) throw new Error("Não foi possível confirmar a gravação.");
             const verifyResult = await verifyResponse.json();
+            const apiId = t.apiId || currentEditingTableId;
             const savedTable = Array.isArray(verifyResult)
-                ? verifyResult.find(row => row?.id === currentEditingTableId)
-                : verifyResult?.data?.[currentEditingTableId];
+                ? verifyResult.find(row => row?.id === apiId || Number(row?.number) === Number(t.number))
+                : verifyResult?.data?.[apiId];
             if (!savedTable) throw new Error("Mesa não encontrada na confirmação da planilha.");
             const fieldsToVerify = ['status', 'identification', 'observation', 'paymentMethod', 'missingAmount',
                 'installmentsCount', 'installmentsValues', 'guests', 'seller', 'sellerOther', 'saleDate'];
