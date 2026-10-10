@@ -1158,6 +1158,7 @@
     async function saveTableData() {
         if (!currentEditingTableId || !isEditor) return;
         const t = tablesData[currentEditingTableId];
+        const originalData = JSON.parse(JSON.stringify(t));
 
         t.status          = document.getElementById('modal-status-select').value;
         t.identification  = document.getElementById('modal-identification').value.trim();
@@ -1189,12 +1190,28 @@
         try {
             const response = await fetch(WEB_APP_URL, {
                 method: 'POST',
+                mode: 'no-cors',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(t)
             });
-            
-            // Adicionado tratamento de erro para a resposta do POST
-            if (!response.ok) throw new Error("Erro na comunicação com o servidor.");
+
+            // Apps Script ContentService redireciona a resposta para googleusercontent;
+            // a gravação é confirmada em seguida por uma nova leitura da planilha.
+            if (response.type !== 'opaque') throw new Error("Resposta inesperada ao enviar os dados.");
+            await new Promise(resolve => setTimeout(resolve, 700));
+            const verifyResponse = await fetch(WEB_APP_URL + '?_=' + Date.now(), { cache: 'no-store' });
+            if (!verifyResponse.ok) throw new Error("Não foi possível confirmar a gravação.");
+            const verifyResult = await verifyResponse.json();
+            const savedTable = Array.isArray(verifyResult)
+                ? verifyResult.find(row => row?.id === currentEditingTableId)
+                : verifyResult?.data?.[currentEditingTableId];
+            if (!savedTable) throw new Error("Mesa não encontrada na confirmação da planilha.");
+            const fieldsToVerify = ['status', 'identification', 'observation', 'paymentMethod', 'missingAmount',
+                'installmentsCount', 'installmentsValues', 'guests', 'seller', 'sellerOther', 'saleDate'];
+            const confirmed = fieldsToVerify.every(key =>
+                JSON.stringify(savedTable[key] ?? null) === JSON.stringify(t[key] ?? null)
+            );
+            if (!confirmed) throw new Error("A planilha não confirmou os dados enviados.");
 
             renderPins();
             updateStats();
@@ -1202,6 +1219,9 @@
             showToast();
         } catch (e) {
             console.error('Erro ao salvar:', e);
+            Object.assign(t, originalData);
+            renderPins();
+            updateStats();
             alert('Erro ao salvar na planilha. Verifique sua conexão.');
         } finally {
             btn.innerHTML = '<i class="ph ph-floppy-disk"></i> Salvar Alterações';
