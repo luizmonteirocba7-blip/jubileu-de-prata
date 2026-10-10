@@ -1208,8 +1208,11 @@
             if (!savedTable) throw new Error("Mesa não encontrada na confirmação da planilha.");
             const fieldsToVerify = ['status', 'identification', 'observation', 'paymentMethod', 'missingAmount',
                 'installmentsCount', 'installmentsValues', 'guests', 'seller', 'sellerOther', 'saleDate'];
+            const comparable = value => Array.isArray(value)
+                ? value.map(item => String(item ?? '').trim())
+                : String(value ?? '').trim();
             const confirmed = fieldsToVerify.every(key =>
-                JSON.stringify(savedTable[key] ?? null) === JSON.stringify(t[key] ?? null)
+                JSON.stringify(comparable(savedTable[key])) === JSON.stringify(comparable(t[key]))
             );
             if (!confirmed) throw new Error("A planilha não confirmou os dados enviados.");
 
@@ -1222,7 +1225,7 @@
             Object.assign(t, originalData);
             renderPins();
             updateStats();
-            alert('Erro ao salvar na planilha. Verifique sua conexão.');
+            alert('Não foi possível confirmar o salvamento: ' + e.message);
         } finally {
             btn.innerHTML = '<i class="ph ph-floppy-disk"></i> Salvar Alterações';
             btn.disabled = false;
