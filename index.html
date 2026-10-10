@@ -874,7 +874,7 @@
             tablesData[`T${i}`] = {
                 id: `T${i}`, number: String(i).padStart(2, '0'), status: 'livre',
                 identification: '', observation: '', paymentMethod: '', missingAmount: '', // ADDED observation
-                installmentsCount: '2', installmentsValues: Array(5).fill(''),
+                installmentsCount: '2', installmentsValues: Array(6).fill(''),
                 guests: Array(10).fill(''), seller: '', sellerOther: '', saleDate: ''
             };
         }
@@ -1177,7 +1177,7 @@
             t.guests[i] = (document.getElementById(`guest-${i}`)?.value || '').trim();
         }
 
-        t.installmentsValues = Array(5).fill('');
+        t.installmentsValues = Array(6).fill('');
         if (t.paymentMethod === 'parcelado') {
             const count = parseInt(t.installmentsCount);
             for (let i = 0; i < count; i++) {
