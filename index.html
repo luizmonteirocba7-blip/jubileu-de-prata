@@ -868,6 +868,8 @@
     const tablesData = {};
     let currentEditingTableId = null;
     let isEditor = false;
+    const normalizeStatus = status => status === 'negociação' ? 'negociacao' : status;
+    const statusForSheet = status => status === 'negociacao' ? 'negociação' : status;
 
     function initializeData() {
         for (let i = 1; i <= 30; i++) {
@@ -898,7 +900,9 @@
                     const apiId = String(d?.id || '');
                     const number = Number(d?.number || apiId.match(/\d+/)?.[0]);
                     const localId = 'T' + number;
-                    if (tablesData[localId]) Object.assign(tablesData[localId], d, { id: localId, apiId });
+                    if (tablesData[localId]) Object.assign(tablesData[localId], d, {
+                        id: localId, apiId, status: normalizeStatus(d.status)
+                    });
                 }
                 badge.classList.add('online');
                 label.textContent = 'Google Sheets online';
@@ -1195,7 +1199,7 @@
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ ...t, id: t.apiId || t.id })
+                body: JSON.stringify({ ...t, id: t.apiId || t.id, status: statusForSheet(t.status) })
             });
 
             // Apps Script ContentService redireciona a resposta para googleusercontent;
@@ -1215,9 +1219,11 @@
             const comparable = value => Array.isArray(value)
                 ? value.map(item => String(item ?? '').trim())
                 : String(value ?? '').trim();
-            const confirmed = fieldsToVerify.every(key =>
-                JSON.stringify(comparable(savedTable[key])) === JSON.stringify(comparable(t[key]))
-            );
+            const confirmed = fieldsToVerify.every(key => {
+                const savedValue = key === 'status' ? normalizeStatus(savedTable[key]) : savedTable[key];
+                const currentValue = key === 'status' ? normalizeStatus(t[key]) : t[key];
+                return JSON.stringify(comparable(savedValue)) === JSON.stringify(comparable(currentValue));
+            });
             if (!confirmed) throw new Error("A planilha não confirmou os dados enviados.");
 
             renderPins();
