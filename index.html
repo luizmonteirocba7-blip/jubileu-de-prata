@@ -514,6 +514,24 @@
             border-color: #aeb8c4 !important;
             text-shadow: none !important;
         }
+        .jubilee-mark {
+            width: 44px;
+            height: 44px;
+            flex: 0 0 44px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            color: #536273;
+            font-size: 25px;
+            background: linear-gradient(145deg, #edf0f4, #c1cad4);
+            border: 1px solid #aeb9c6;
+            box-shadow: inset 0 1px 1px rgba(255,255,255,.9), 0 3px 8px rgba(52,66,86,.12);
+        }
+        .loader-medal {
+            color: #627286;
+            font-size: 34px;
+            filter: drop-shadow(0 2px 5px rgba(64,78,96,.22));
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col" style="height:100dvh;">
@@ -521,12 +539,12 @@
     <div id="loading-overlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center transition-opacity duration-500 bg-[#0a0c13]/95 backdrop-blur-md">
         
         <div class="relative flex items-center justify-center mb-8">
-            <div class="absolute w-28 h-28 border-t border-b border-[#f0d400]/70 rounded-full animate-[spin_2s_linear_infinite]"></div>
-            <div class="absolute w-32 h-32 border-l border-r border-[#f0d400]/30 rounded-full animate-[spin_3s_linear_infinite_reverse]"></div>
+            <div class="absolute w-28 h-28 border-t border-b border-[#f0d400]/70 rounded-full animate-[spin_2s_linear_infinite]" style="border-color:#8b98a8"></div>
+            <div class="absolute w-32 h-32 border-l border-r border-[#f0d400]/30 rounded-full animate-[spin_3s_linear_infinite_reverse]" style="border-color:#c1cad4"></div>
             
-            <div class="absolute w-20 h-20 bg-[#f0d400]/15 rounded-full animate-pulse blur-xl"></div>
+            <div class="absolute w-20 h-20 bg-[#f0d400]/15 rounded-full animate-pulse blur-xl" style="background:rgba(139,152,168,.18)"></div>
             
-            <div class="relative z-10 flex h-16 w-16 items-center justify-center rounded-full border border-[#f0d400]/70 bg-[#f0d400]/10 font-display text-lg font-bold text-[#fff176] drop-shadow-[0_0_18px_rgba(240,212,0,0.35)]">MESAS</div>
+            <div class="relative z-10 flex h-16 w-16 items-center justify-center rounded-full border border-[#f0d400]/70 bg-[#f0d400]/10 drop-shadow-[0_0_18px_rgba(240,212,0,0.35)]" style="border-color:#aeb9c6;background:linear-gradient(145deg,#eef1f4,#cbd3dc)"><i class="ph ph-medal loader-medal" aria-label="Jubileu de Prata"></i></div>
         </div>
         
         <h2 class="font-display gold-text text-2xl font-bold tracking-wide">Jubileu de Prata</h2>
@@ -556,7 +574,7 @@
         <div class="max-w-screen-2xl mx-auto flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3">
             
             <div class="flex items-center gap-4">
-                <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg border border-[#f0d400]/60 bg-[#f0d400]/10 font-display text-sm font-bold text-[#fff176]">MESAS</div>
+                <div class="jubilee-mark" aria-label="Jubileu de Prata"><i class="ph ph-medal" aria-hidden="true"></i></div>
                 <div>
                     <h1 class="font-display text-lg md:text-xl font-bold gold-text leading-tight">Jubileu de Prata</h1>
                     <div class="flex items-center gap-2 mt-0.5">
