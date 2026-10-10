@@ -532,6 +532,28 @@
             font-size: 34px;
             filter: drop-shadow(0 2px 5px rgba(64,78,96,.22));
         }
+        .edit-mode-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            min-height: 38px;
+            padding: 8px 13px;
+            border: 1px solid #aeb9c6;
+            border-radius: 10px;
+            background: linear-gradient(145deg, #edf0f4, #c4ccd6);
+            color: #435266;
+            font-size: 12px;
+            font-weight: 700;
+            box-shadow: 0 3px 9px rgba(52,66,86,.1);
+            transition: background .18s, transform .18s;
+        }
+        .edit-mode-button:hover { background: #d4dbe3; transform: translateY(-1px); }
+        .edit-mode-button.active {
+            background: linear-gradient(145deg, #69798d, #48596f);
+            border-color: #526277;
+            color: #fff;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col" style="height:100dvh;">
@@ -610,6 +632,9 @@
                         <div><div class="stat-count" id="cnt-bloqueada">–</div><div class="stat-label">Bloqueadas</div></div>
                     </div>
                 </div>
+                <button type="button" id="edit-mode-btn" class="edit-mode-button" onclick="toggleEditMode()" aria-pressed="false">
+                    <i class="ph ph-pencil-simple text-base"></i><span>Editar mesas</span>
+                </button>
             </div>
         </div>
     </header>
@@ -975,6 +1000,16 @@
             err.classList.remove('hidden');
             setTimeout(() => err.classList.add('hidden'), 3000);
         }
+    }
+    function toggleEditMode() {
+        isEditor = !isEditor;
+        const button = document.getElementById('edit-mode-btn');
+        button.classList.toggle('active', isEditor);
+        button.setAttribute('aria-pressed', String(isEditor));
+        button.innerHTML = isEditor
+            ? '<i class="ph ph-lock-key-open text-base"></i><span>Sair da edição</span>'
+            : '<i class="ph ph-pencil-simple text-base"></i><span>Editar mesas</span>';
+        if (!isEditor && currentEditingTableId) closeModal();
     }
     document.getElementById('auth-password').addEventListener('keypress', e => { if (e.key === 'Enter') authenticate(); });
 
