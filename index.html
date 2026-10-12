@@ -721,14 +721,8 @@
                     <div class="section-label"><i class="ph ph-wallet text-sm"></i> Controle Financeiro</div>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                            <label class="field-label">Vendedor(a)</label>
-                            <select id="modal-seller" onchange="toggleSellerOther()" class="field-input">
-                                <option value="">Não informado</option>
-                                <option value="MAJ Tamara">MAJ Tamara</option>
-                                <option value="SGT Ferro">SGT Ferro</option>
-                                <option value="Outros">Outros...</option>
-                            </select>
-                            <input type="text" id="modal-seller-other" class="field-input hidden mt-2" placeholder="Nome do vendedor">
+                            <label class="field-label" for="modal-seller">Vendedor(a)</label>
+                            <input type="text" id="modal-seller" class="field-input" placeholder="Digite o nome do vendedor">
                         </div>
                         <div>
                             <label class="field-label">Data da Venda</label>
@@ -868,8 +862,21 @@
     const tablesData = {};
     let currentEditingTableId = null;
     let isEditor = false;
-    const normalizeStatus = status => status === 'negociação' ? 'negociacao' : status;
-    const statusForSheet = status => status === 'negociacao' ? 'negociação' : status;
+    const normalizeStatus = status => {
+        const value = String(status ?? 'livre').trim().toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '');
+        const aliases = { emnegociacao: 'negociacao' };
+        const normalized = aliases[value] || value;
+        return ['livre', 'negociacao', 'reservada', 'patrocinio', 'bloqueada'].includes(normalized)
+            ? normalized : 'livre';
+    };
+    const statusForSheet = status => normalizeStatus(status) === 'negociacao'
+        ? 'negociação' : normalizeStatus(status);
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, character => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[character]);
+    }
 
     function initializeData() {
         for (let i = 1; i <= 30; i++) {
@@ -936,26 +943,28 @@
                 if (!table) return;
 
                 const { top, left } = cellToPercent(ri, ci);
-                const idHtml = table.identification
-                    ? `<span class="pin-id">${table.identification}</span>` : '';
-
-                const statusLabel = {
-                    livre: 'Livre', negociacao: 'Em Negociação',
-                    reservada: 'Reservada', patrocinio: 'Patrocínio', bloqueada: 'Bloqueada'
-                }[table.status] || table.status;
-
-                const tooltipContent = table.identification
-                    ? `Mesa ${table.number} · ${statusLabel}<br><span style="color:#9ca3af">${table.identification}</span>`
-                    : `Mesa ${table.number} · ${statusLabel}`;
+                const visualStatus = normalizeStatus(table.status);
+                const safeNumber = escapeHtml(table.number);
+                const safeIdentification = escapeHtml(table.identification);
+                const idHtml = safeIdentification
+                    ? `<span class="pin-id">${safeIdentification}</span>` : '';
+                const statusLabel = STATUS_LABELS[visualStatus] || STATUS_LABELS.livre;
+                const tooltipContent = safeIdentification
+                    ? `Mesa ${safeNumber} · ${statusLabel}<br><span style="color:#9ca3af">${safeIdentification}</span>`
+                    : `Mesa ${safeNumber} · ${statusLabel}`;
 
                 const waveDelay = ((num * 137) % 2400) / 1000;
-                const waveColor = 'rgba(34,197,94,0.6)';
+                const pinBackground = STATUS_BG[visualStatus] || STATUS_BG.livre;
+                const pinBorder = STATUS_BORDER[visualStatus] || STATUS_BORDER.livre;
+                const pinGlow = STATUS_GLOW[visualStatus] || STATUS_GLOW.livre;
+                const pinGlowStrong = STATUS_GLOW_STRONG[visualStatus] || STATUS_GLOW_STRONG.livre;
+                const waveColor = STATUS_WAVE_COLOR[visualStatus] || STATUS_WAVE_COLOR.livre;
 
                 htmlBuffer += `
                 <div class="table-pin" id="pin-${table.id}" onclick="openModal('${table.id}')"
                     style="top: ${top}%; left: ${left}%; width: ${PIN_SIZE}px; height: ${PIN_SIZE}px;
-                           background: rgba(34,197,94,0.88); border-color: #4ade80;
-                           --pin-glow: 0 0 12px rgba(34,197,94,0.55); --pin-glow-strong: 0 0 22px rgba(34,197,94,0.82);
+                           background: ${pinBackground}; border-color: ${pinBorder};
+                           --pin-glow: ${pinGlow}; --pin-glow-strong: ${pinGlowStrong};
                            animation-delay: ${waveDelay}s; backdrop-filter: blur(2px);">
                     <span class="wave wave-1" style="border-color:${waveColor}; animation-delay:${waveDelay}s"></span>
                     <span class="wave wave-2" style="border-color:${waveColor}; animation-delay:${waveDelay + 0.6}s"></span>
@@ -1044,11 +1053,15 @@
         document.getElementById('status-select-menu').classList.remove('open');
     }
     function selectStatus(value) {
+        value = normalizeStatus(value);
         document.getElementById('modal-status-select').value = value;
         document.getElementById('status-label-text').textContent = STATUS_LABELS[value];
         const dot = document.getElementById('status-dot');
         dot.style.background = STATUS_DOT_COLOR[value];
         dot.style.color      = STATUS_DOT_COLOR[value];
+        const indicator = document.getElementById('modal-status-indicator');
+        indicator.style.background = MODAL_INDICATOR[value];
+        indicator.style.boxShadow = STATUS_GLOW[value];
         document.querySelectorAll('#status-select-menu .custom-select-option').forEach(el => {
             el.classList.toggle('selected', el.dataset.value === value);
         });
@@ -1059,10 +1072,6 @@
         if (!document.getElementById('status-select-wrap')?.contains(e.target)) closeStatusDropdown();
     });
 
-    function toggleSellerOther() {
-        const v = document.getElementById('modal-seller').value;
-        document.getElementById('modal-seller-other').classList.toggle('hidden', v !== 'Outros');
-    }
     function togglePaymentFields() {
         const v = document.getElementById('modal-payment-method').value;
         const isParceled = v === 'parcelado';
@@ -1081,7 +1090,7 @@
             htmlBuffer += `
                 <div>
                     <label class="field-label">Parcela ${i+1} (R$)</label>
-                    <input type="text" id="installment-val-${i}" value="${val}" placeholder="Ex: 100,00" class="field-input ${!isEditor ? 'readonly' : ''}">
+                    <input type="text" id="installment-val-${i}" value="${escapeHtml(val)}" placeholder="Ex: 100,00" class="field-input ${!isEditor ? 'readonly' : ''}">
                 </div>`;
         }
         container.innerHTML = htmlBuffer;
@@ -1093,8 +1102,9 @@
 
         document.getElementById('modal-title').textContent = `Mesa ${t.number}`;
         const indicator = document.getElementById('modal-status-indicator');
-        indicator.style.background = MODAL_INDICATOR[t.status];
-        indicator.style.boxShadow  = STATUS_GLOW[t.status];
+        const modalStatus = normalizeStatus(t.status);
+        indicator.style.background = MODAL_INDICATOR[modalStatus] || MODAL_INDICATOR.livre;
+        indicator.style.boxShadow  = STATUS_GLOW[modalStatus] || STATUS_GLOW.livre;
 
         document.getElementById('edit-badge').classList.toggle('hidden', !isEditor);
         document.getElementById('financial-section').classList.toggle('hidden', !isEditor);
@@ -1117,14 +1127,14 @@
 
         setField('modal-identification', t.identification);
         setField('modal-observation', t.observation); // <--- CAMPO ADICIONADO AQUI
-        setField('modal-seller', t.seller, 'select');
-        setField('modal-seller-other', t.sellerOther);
+        const sellerName = t.seller === 'Outros'
+            ? (t.sellerOther || '') : (t.seller || t.sellerOther || '');
+        setField('modal-seller', sellerName);
         setField('modal-sale-date', t.saleDate);
         setField('modal-payment-method', t.paymentMethod, 'select');
         setField('modal-missing-amount', t.missingAmount);
         setField('modal-installments-count', t.installmentsCount, 'select');
 
-        toggleSellerOther();
         togglePaymentFields();
 
         const gContainer = document.getElementById('guests-list');
@@ -1133,7 +1143,7 @@
             guestsHtml += `
                 <div class="relative flex items-center gap-2">
                     <span class="text-[10px] font-bold text-gray-600 w-4 text-right flex-shrink-0">${i+1}</span>
-                    <input type="text" id="guest-${i}" value="${t.guests[i]}"
+                    <input type="text" id="guest-${i}" value="${escapeHtml(t.guests[i])}"
                         placeholder="${isEditor ? 'Nome do convidado...' : '— Vazio —'}"
                         class="field-input flex-1 ${!isEditor ? 'readonly' : ''}"
                         ${!isEditor ? 'readonly' : ''}>
@@ -1170,8 +1180,8 @@
         t.status          = document.getElementById('modal-status-select').value;
         t.identification  = document.getElementById('modal-identification').value.trim();
         t.observation     = document.getElementById('modal-observation').value.trim(); // <--- CAMPO ADICIONADO AQUI
-        t.seller          = document.getElementById('modal-seller').value;
-        t.sellerOther     = document.getElementById('modal-seller-other').value.trim();
+        t.seller          = document.getElementById('modal-seller').value.trim();
+        t.sellerOther     = '';
         t.saleDate        = document.getElementById('modal-sale-date').value;
         t.paymentMethod   = document.getElementById('modal-payment-method').value;
         t.missingAmount   = document.getElementById('modal-missing-amount').value.trim();
@@ -1202,29 +1212,40 @@
                 body: JSON.stringify({ ...t, id: t.apiId || t.id, status: statusForSheet(t.status) })
             });
 
-            // Apps Script ContentService redireciona a resposta para googleusercontent;
-            // a gravação é confirmada em seguida por uma nova leitura da planilha.
-            if (response.type !== 'opaque') throw new Error("Resposta inesperada ao enviar os dados.");
-            await new Promise(resolve => setTimeout(resolve, 700));
-            const verifyResponse = await fetch(WEB_APP_URL + '?_=' + Date.now(), { cache: 'no-store' });
-            if (!verifyResponse.ok) throw new Error("Não foi possível confirmar a gravação.");
-            const verifyResult = await verifyResponse.json();
+            // O POST usa no-cors; confirma a gravação relendo até a planilha atualizar.
+            if (response.type !== 'opaque') throw new Error('Resposta inesperada ao enviar os dados.');
+
             const apiId = t.apiId || currentEditingTableId;
-            const savedTable = Array.isArray(verifyResult)
-                ? verifyResult.find(row => row?.id === apiId || Number(row?.number) === Number(t.number))
-                : verifyResult?.data?.[apiId];
-            if (!savedTable) throw new Error("Mesa não encontrada na confirmação da planilha.");
             const fieldsToVerify = ['status', 'identification', 'observation', 'paymentMethod', 'missingAmount',
                 'installmentsCount', 'installmentsValues', 'guests', 'seller', 'sellerOther', 'saleDate'];
             const comparable = value => Array.isArray(value)
                 ? value.map(item => String(item ?? '').trim())
                 : String(value ?? '').trim();
-            const confirmed = fieldsToVerify.every(key => {
+            const isConfirmed = savedTable => fieldsToVerify.every(key => {
                 const savedValue = key === 'status' ? normalizeStatus(savedTable[key]) : savedTable[key];
                 const currentValue = key === 'status' ? normalizeStatus(t[key]) : t[key];
                 return JSON.stringify(comparable(savedValue)) === JSON.stringify(comparable(currentValue));
             });
-            if (!confirmed) throw new Error("A planilha não confirmou os dados enviados.");
+
+            let savedTable = null;
+            for (let attempt = 0; attempt < 8; attempt++) {
+                try {
+                    const verifyResponse = await fetch(WEB_APP_URL + '?_=' + Date.now(), { cache: 'no-store' });
+                    if (verifyResponse.ok) {
+                        const verifyResult = await verifyResponse.json();
+                        savedTable = Array.isArray(verifyResult)
+                            ? verifyResult.find(row => row?.id === apiId || Number(row?.number) === Number(t.number))
+                            : verifyResult?.data?.[apiId];
+                        if (savedTable && isConfirmed(savedTable)) break;
+                    }
+                } catch (verifyError) {
+                    console.warn('Aguardando confirmação da planilha:', verifyError);
+                }
+                if (attempt < 7) await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            if (!savedTable) throw new Error('Mesa não encontrada na confirmação da planilha.');
+            if (!isConfirmed(savedTable)) throw new Error('A planilha não confirmou os dados após várias tentativas.');
 
             renderPins();
             updateStats();
