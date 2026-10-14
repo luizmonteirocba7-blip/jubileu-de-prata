@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/jpeg" href="./baile.jpeg">
+    <link rel="apple-touch-icon" href="./baile.jpeg">
     <title>Painel de Gestão - Jubileu de Prata</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -518,14 +520,28 @@
             width: 44px;
             height: 44px;
             flex: 0 0 44px;
-            display: grid;
-            place-items: center;
+            display: block;
             border-radius: 12px;
-            color: #536273;
-            font-size: 25px;
-            background: linear-gradient(145deg, #edf0f4, #c1cad4);
+            padding: 2px;
+            overflow: hidden;
+            background: #fff;
             border: 1px solid #aeb9c6;
             box-shadow: inset 0 1px 1px rgba(255,255,255,.9), 0 3px 8px rgba(52,66,86,.12);
+        }
+        .jubilee-mark img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 9px;
+        }
+        .loader-logo {
+            width: 52px;
+            height: 52px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(64,78,96,.18);
         }
         .loader-medal {
             color: #627286;
@@ -566,7 +582,7 @@
             
             <div class="absolute w-20 h-20 bg-[#f0d400]/15 rounded-full animate-pulse blur-xl" style="background:rgba(139,152,168,.18)"></div>
             
-            <div class="relative z-10 flex h-16 w-16 items-center justify-center rounded-full border border-[#f0d400]/70 bg-[#f0d400]/10 drop-shadow-[0_0_18px_rgba(240,212,0,0.35)]" style="border-color:#aeb9c6;background:linear-gradient(145deg,#eef1f4,#cbd3dc)"><i class="ph ph-medal loader-medal" aria-label="Jubileu de Prata"></i></div>
+            <div class="relative z-10 flex h-16 w-16 items-center justify-center rounded-full border border-[#f0d400]/70 bg-[#f0d400]/10 drop-shadow-[0_0_18px_rgba(240,212,0,0.35)]" style="border-color:#aeb9c6;background:linear-gradient(145deg,#eef1f4,#cbd3dc)"><img class="loader-logo" src="./baile.jpeg" alt="Logo do Jubileu de Prata"></div>
         </div>
         
         <h2 class="font-display gold-text text-2xl font-bold tracking-wide">Jubileu de Prata</h2>
@@ -596,7 +612,7 @@
         <div class="max-w-screen-2xl mx-auto flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3">
             
             <div class="flex items-center gap-4">
-                <div class="jubilee-mark" aria-label="Jubileu de Prata"><i class="ph ph-medal" aria-hidden="true"></i></div>
+                <div class="jubilee-mark"><img src="./baile.jpeg" alt="Logo do Jubileu de Prata"></div>
                 <div>
                     <h1 class="font-display text-lg md:text-xl font-bold gold-text leading-tight">Jubileu de Prata</h1>
                     <div class="flex items-center gap-2 mt-0.5">
